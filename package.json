@@ -1,0 +1,44 @@
+{
+	"name": "tween-es",
+	"description": "",
+	"version": "1.0.0-alpha.1",
+	"type": "module",
+	"main": "dist/tween-es.cjs.js",
+	"types": "dist/tween-es.d.ts",
+	"module": "dist/tween-es.esm.js",
+	"exports": {
+		"require": "./dist/tween-es.cjs.js",
+		"import": "./dist/tween-es.esm.js"
+	},
+	"files": [
+		"dist"
+	],
+	"license": "MIT",
+	"keywords": [
+		"tween",
+		"interpolation"
+	],
+	"scripts": {
+		"dev": "(npm run tsc-watch -- --preserveWatchOutput & p1=$!; npm run rollup-build -- --watch & p2=$!; wait $p1 $p2)",
+		"build": "rimraf dist .tmp && npm run tsc && npm run rollup-build",
+		"rollup-build": "rollup -c ./rollup.config.js",
+		"tsc": "tsc",
+		"tsc-watch": "tsc --watch",
+		"prepare": "npm run build"
+	},
+	"devDependencies": {
+		"@sinonjs/fake-timers": "^6.0.1",
+		"@types/sinonjs__fake-timers": "^6.0.4",
+		"@typescript-eslint/eslint-plugin": "^5.54.1",
+		"@typescript-eslint/parser": "^5.54.1",
+		"eslint": "^8.35.0",
+		"eslint-config-prettier": "^8.7.0",
+		"eslint-plugin-prettier": "^4.2.1",
+		"prettier": "^2.8.4",
+		"rimraf": "^4.4.0",
+		"rollup": "^3.19.0",
+		"rollup-plugin-dts": "^5.2.0",
+		"tslib": "^2.5.0",
+		"typescript": "^4.9.5"
+	}
+}
