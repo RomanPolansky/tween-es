@@ -1,12 +1,9 @@
-import { mainGroup } from './mainGroup'
-import Sequence from './Sequence'
-
-import type Group from './Group'
+import Group from './Group'
 import type { EasingFunction } from './Easing'
 import Easing from './Easing'
 import type { InterpolationFunction } from './Interpolation'
 import Interpolation from './Interpolation'
-import Now from './Now'
+import nextId from './nextId'
 
 export type UnknownProps = Record<string, any>
 
@@ -36,24 +33,24 @@ export default class Tween<T extends UnknownProps> {
 	private _onRepeatCallback?: (object: T) => void
 	private _onCompleteCallback?: (object: T) => void
 	private _onStopCallback?: (object: T) => void
-	private _id = Sequence.nextId()
+	private _id = nextId()
 	private _isChainStopped = false
 
-	constructor(private _object: T, private _group: Group | false = mainGroup) {}
+	constructor(private _object: T, private _group: Group = Group.shared) {}
 
-	getId(): number {
+	public getId(): number {
 		return this._id
 	}
 
-	isPlaying(): boolean {
+	public isPlaying(): boolean {
 		return this._isPlaying
 	}
 
-	isPaused(): boolean {
+	public isPaused(): boolean {
 		return this._isPaused
 	}
 
-	to(properties: UnknownProps, duration?: number): this {
+	public to(properties: UnknownProps, duration?: number): this {
 		// TODO? restore this, then update the 07_dynamic_to example to set fox
 		// tween's to on each update. That way the behavior is opt-in (there's
 		// currently no opt-out).
@@ -67,18 +64,18 @@ export default class Tween<T extends UnknownProps> {
 		return this
 	}
 
-	duration(d = 1000): this {
+	public duration(d = 1000): this {
 		this._duration = d
 		return this
 	}
 
-	start(time: number = Now.get()): this {
+	public start(time: number = this._group.getTime()): this {
 		if (this._isPlaying) {
 			return this
 		}
 
 		// eslint-disable-next-line
-		this._group && this._group.add(this as any)
+		this._group.add(this as any)
 
 		this._repeat = this._initialRepeat
 
@@ -183,7 +180,7 @@ export default class Tween<T extends UnknownProps> {
 		}
 	}
 
-	stop(): this {
+	public stop(): this {
 		if (!this._isChainStopped) {
 			this._isChainStopped = true
 			this.stopChainedTweens()
@@ -193,8 +190,7 @@ export default class Tween<T extends UnknownProps> {
 			return this
 		}
 
-		// eslint-disable-next-line
-		this._group && this._group.remove(this as any)
+		this._group.remove(this as any)
 
 		this._isPlaying = false
 
@@ -207,13 +203,13 @@ export default class Tween<T extends UnknownProps> {
 		return this
 	}
 
-	end(): this {
+	public end(): this {
 		this._goToEnd = true
 		this.update(Infinity)
 		return this
 	}
 
-	pause(time: number = Now.get()): this {
+	public pause(time: number = this._group.getTime()): this {
 		if (this._isPaused || !this._isPlaying) {
 			return this
 		}
@@ -222,13 +218,12 @@ export default class Tween<T extends UnknownProps> {
 
 		this._pauseStart = time
 
-		// eslint-disable-next-line
-		this._group && this._group.remove(this as any)
+		this._group.remove(this as any)
 
 		return this
 	}
 
-	resume(time: number = Now.get()): this {
+	public resume(time: number = this._group.getTime()): this {
 		if (!this._isPaused || !this._isPlaying) {
 			return this
 		}
@@ -239,87 +234,86 @@ export default class Tween<T extends UnknownProps> {
 
 		this._pauseStart = 0
 
-		// eslint-disable-next-line
-		this._group && this._group.add(this as any)
+		this._group.add(this as any)
 
 		return this
 	}
 
-	stopChainedTweens(): this {
+	public stopChainedTweens(): this {
 		for (let i = 0, numChainedTweens = this._chainedTweens.length; i < numChainedTweens; i++) {
 			this._chainedTweens[i].stop()
 		}
 		return this
 	}
 
-	group(group = mainGroup): this {
+	public group(group = Group.shared): this {
 		this._group = group
 		return this
 	}
 
-	delay(amount = 0): this {
+	public delay(amount = 0): this {
 		this._delayTime = amount
 		return this
 	}
 
-	repeat(times = 0): this {
+	public repeat(times = 0): this {
 		this._initialRepeat = times
 		this._repeat = times
 		return this
 	}
 
-	repeatDelay(amount?: number): this {
+	public repeatDelay(amount?: number): this {
 		this._repeatDelayTime = amount
 		return this
 	}
 
-	yoyo(yoyo = false): this {
+	public yoyo(yoyo = false): this {
 		this._yoyo = yoyo
 		return this
 	}
 
-	easing(easingFunction: EasingFunction = Easing.linear): this {
+	public easing(easingFunction: EasingFunction = Easing.linear): this {
 		this._easingFunction = easingFunction
 		return this
 	}
 
-	interpolation(interpolationFunction: InterpolationFunction = Interpolation.linear): this {
+	public interpolation(interpolationFunction: InterpolationFunction = Interpolation.linear): this {
 		this._interpolationFunction = interpolationFunction
 		return this
 	}
 
 	// eslint-disable-next-line
-	chain(...tweens: Array<Tween<any>>): this {
+	public chain(...tweens: Array<Tween<any>>): this {
 		this._chainedTweens = tweens
 		return this
 	}
 
-	onStart(callback?: (object: T) => void): this {
+	public onStart(callback?: (object: T) => void): this {
 		this._onStartCallback = callback
 		return this
 	}
 
-	onEveryStart(callback?: (object: T) => void): this {
+	public onEveryStart(callback?: (object: T) => void): this {
 		this._onEveryStartCallback = callback
 		return this
 	}
 
-	onUpdate(callback?: (object: T, elapsed: number) => void): this {
+	public onUpdate(callback?: (object: T, elapsed: number) => void): this {
 		this._onUpdateCallback = callback
 		return this
 	}
 
-	onRepeat(callback?: (object: T) => void): this {
+	public onRepeat(callback?: (object: T) => void): this {
 		this._onRepeatCallback = callback
 		return this
 	}
 
-	onComplete(callback?: (object: T) => void): this {
+	public onComplete(callback?: (object: T) => void): this {
 		this._onCompleteCallback = callback
 		return this
 	}
 
-	onStop(callback?: (object: T) => void): this {
+	public onStop(callback?: (object: T) => void): this {
 		this._onStopCallback = callback
 		return this
 	}
@@ -331,7 +325,7 @@ export default class Tween<T extends UnknownProps> {
 	 * otherwise (calling update on a paused tween still returns true because
 	 * it is still playing, just paused).
 	 */
-	update(time = Now.get(), autoStart = true): boolean {
+	public update(time = this._group.getTime(), autoStart = true): boolean {
 		if (this._isPaused) return true
 
 		let property

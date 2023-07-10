@@ -1,4 +1,3 @@
-import Now from './Now'
 import type Tween from './Tween'
 import type { UnknownProps } from './Tween'
 
@@ -9,6 +8,10 @@ import type { UnknownProps } from './Tween'
  * In these cases, you may want to create your own smaller groups of tween
  */
 export default class Group {
+	public static shared = new Group()
+
+	private _time = 0
+
 	private _tweens: {
 		[key: string]: Tween<UnknownProps>
 	} = {}
@@ -17,27 +20,33 @@ export default class Group {
 		[key: string]: Tween<UnknownProps>
 	} = {}
 
-	getAll(): Array<Tween<UnknownProps>> {
+	public getTime() {
+		return this._time
+	}
+
+	public getAll(): Array<Tween<UnknownProps>> {
 		return Object.keys(this._tweens).map(tweenId => {
 			return this._tweens[tweenId]
 		})
 	}
 
-	removeAll(): void {
+	public removeAll(): void {
 		this._tweens = {}
 	}
 
-	add(tween: Tween<UnknownProps>): void {
+	public add(tween: Tween<UnknownProps>): void {
 		this._tweens[tween.getId()] = tween
 		this._tweensAddedDuringUpdate[tween.getId()] = tween
 	}
 
-	remove(tween: Tween<UnknownProps>): void {
+	public remove(tween: Tween<UnknownProps>): void {
 		delete this._tweens[tween.getId()]
 		delete this._tweensAddedDuringUpdate[tween.getId()]
 	}
 
-	update(time: number = Now.get(), preserve = false): boolean {
+	public update(time: number, preserve = false): boolean {
+		this._time = time
+
 		let tweenIds = Object.keys(this._tweens)
 
 		if (tweenIds.length === 0) {
@@ -56,7 +65,7 @@ export default class Group {
 				const tween = this._tweens[tweenIds[i]]
 				const autoStart = !preserve
 
-				if (tween && tween.update(time, autoStart) === false && !preserve) {
+				if (tween && tween.update(this._time, autoStart) === false && !preserve) {
 					delete this._tweens[tweenIds[i]]
 				}
 			}
